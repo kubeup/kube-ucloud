@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ucloud-controller
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: ucloud-controller
+    image: kubeup/kube-ucloud:master
+    command:
+    - /ucloud-controller
+    - --server=http://127.0.0.1:8080
+    - --leader-elect=true
+    - --cluster-cidr=YOUR_CLUSTER_CIDR
+    env:
+    - name: UCLOUD_PUBLIC_KEY
+      value: 
+    - name: UCLOUD_PRIVATE_KEY
+      value: 
+    - name: UCLOUD_REGION
+      value: 
+    - name: UCLOUD_PROJECT
+      value: 
+
