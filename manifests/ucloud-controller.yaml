@@ -18,6 +18,8 @@ spec:
       value: 
     - name: UCLOUD_PRIVATE_KEY
       value: 
+    - name: UCLOUD_ZONE
+      value: 
     - name: UCLOUD_REGION
       value: 
     - name: UCLOUD_PROJECT
