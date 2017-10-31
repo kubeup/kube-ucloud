@@ -223,6 +223,10 @@ func (p *UCloudProvider) createLoadBalancer(name string, lbOptions *UCloudLoadBa
 		return
 	}
 
+	if lbOptions.NetworkType == "internal" {
+		return
+	}
+
 	// Allocate eip
 	eipId := lbOptions.UseEIP
 	if lbOptions.UseEIP == "" {
