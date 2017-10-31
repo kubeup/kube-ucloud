@@ -390,6 +390,7 @@ func (p *UCloudProvider) ensureLBListeners(lb *ulb.ULBSet, ports []api.ServicePo
 				ProjectId:     p.project,
 				ULBId:         lb.ULBId,
 				ListenType:    ulb.VServerListenType(lbOptions.ListenType),
+				FrontendPort:  int(sp.Port),
 				Method:        lbOptions.Method,
 				ClientTimeout: lbOptions.ClientTimeout,
 			}
