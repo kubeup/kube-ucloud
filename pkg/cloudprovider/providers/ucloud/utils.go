@@ -150,7 +150,7 @@ func (p *UCloudProvider) getInstancesByNodes(nodes []*api.Node) (results []uhost
 		return
 	}
 
-	kv := make(map[string]*uhost.UHostSet)
+	kv := make(map[string]uhost.UHostSet)
 	for _, ins := range instances {
 		privateIP := getUHostPrivateIP(ins)
 		if privateIP == "" {
@@ -158,13 +158,13 @@ func (p *UCloudProvider) getInstancesByNodes(nodes []*api.Node) (results []uhost
 			continue
 		}
 
-		kv[privateIP] = &ins
+		kv[privateIP] = ins
 	}
 
 	for _, node := range nodes {
 		nodeIP := getNodePrivateIP(node)
 		if ins, ok := kv[nodeIP]; ok {
-			results = append(results, *ins)
+			results = append(results, ins)
 		}
 	}
 

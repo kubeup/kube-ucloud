@@ -294,6 +294,10 @@ func (p *UCloudProvider) EnsureLoadBalancer(clusterName string, service *api.Ser
 		return nil, err
 	}
 
+	if len(instances) != len(nodes) {
+		log.V(1).Infof("Instances don't match nodes. Instances: %+v Nodes: %+v", instances, nodes)
+	}
+
 	ids := []string{}
 	for _, ins := range instances {
 		ids = append(ids, ins.UHostId)
@@ -332,7 +336,7 @@ func (p *UCloudProvider) EnsureLoadBalancer(clusterName string, service *api.Ser
 		return nil, err
 	}
 
-	err = p.ensureLBBackends(lb, spec.Ports, instances)
+	err = p.ensureLBBackends(lb, spec.Ports, instances, lbOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +419,7 @@ func (p *UCloudProvider) ensureLBListeners(lb *ulb.ULBSet, ports []api.ServicePo
 	return nil
 }
 
-func (p *UCloudProvider) ensureLBBackends(lb *ulb.ULBSet, sp []api.ServicePort, instances []uhost.UHostSet) error {
+func (p *UCloudProvider) ensureLBBackends(lb *ulb.ULBSet, sp []api.ServicePort, instances []uhost.UHostSet, lbOptions UCloudLoadBalancerOptions) error {
 	for _, vserver := range lb.VServerSet {
 
 		servicePort := (*api.ServicePort)(nil)
@@ -431,6 +435,11 @@ func (p *UCloudProvider) ensureLBBackends(lb *ulb.ULBSet, sp []api.ServicePort, 
 			continue
 		}
 
+		port := int(servicePort.NodePort)
+		if ulb.VServerListenType(lbOptions.ListenType) == ulb.VServerListenTypePacketsTransmit {
+			port = int(servicePort.Port)
+		}
+
 		actual := vserver.BackendSet[:]
 		expected := make(map[string]bool)
 		for _, ins := range instances {
@@ -439,7 +448,7 @@ func (p *UCloudProvider) ensureLBBackends(lb *ulb.ULBSet, sp []api.ServicePort, 
 
 		removals := []string{}
 		for _, s := range actual {
-			if _, ok := expected[s.ResourceId]; s.ResourceType == ULBResourceTypeUHost && int32(s.Port) == servicePort.NodePort && ok {
+			if _, ok := expected[s.ResourceId]; s.ResourceType == ULBResourceTypeUHost && s.Port == port && ok {
 				delete(expected, s.ResourceId)
 				continue
 			}
@@ -457,7 +466,7 @@ func (p *UCloudProvider) ensureLBBackends(lb *ulb.ULBSet, sp []api.ServicePort, 
 				VServerId:    vserver.VServerId,
 				ResourceType: ULBResourceTypeUHost,
 				ResourceId:   ins,
-				Port:         int(servicePort.NodePort),
+				Port:         port,
 			})
 
 			if err != nil {
@@ -513,7 +522,7 @@ func (p *UCloudProvider) UpdateLoadBalancer(clusterName string, service *api.Ser
 		return err
 	}
 
-	err = p.ensureLBBackends(lb, service.Spec.Ports, instances)
+	err = p.ensureLBBackends(lb, service.Spec.Ports, instances, lbOptions)
 	if err != nil {
 		return err
 	}
